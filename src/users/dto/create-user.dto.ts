@@ -1,10 +1,16 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsEmail, IsNumber, IsString } from "class-validator";
+import { BeforeInsert } from "typeorm";
 
 export class CreateUserDto {
     @IsNumber()
-    readonly id: number;
+    id: number;
     @IsString()
-    readonly name: string;
+    name: string;
     @IsString()
-    readonly username: string;
+    username: string;
+    @IsString()
+    password?: string;
+    @IsEmail()
+    email: string;
+
 }
