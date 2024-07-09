@@ -11,6 +11,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Post()
+
   create(@Body() createUserDto: CreateUserDto): Observable<User | Object> {
     return from(this.usersService.create(createUserDto)).pipe(
       map((user: CreateUserDto) => user),
