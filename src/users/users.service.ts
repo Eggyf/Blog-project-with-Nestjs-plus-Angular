@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { catchError, from, map, Observable, switchMap, throwError } from 'rxjs'
 import { AuthService } from 'src/auth/auth.service';
 import { match } from 'assert';
+import { paginate, IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 @Injectable()
 export class UsersService {
   constructor(@InjectRepository(User) private userRepo: Repository<User>, private authService: AuthService) { }
@@ -19,7 +20,7 @@ export class UsersService {
         newUser.name = user.name;
         newUser.password = hashPassword;
         newUser.username = user.username;
-        newUser.role = user.role;
+        newUser.role = UserRole.USER;
 
         return from(this.userRepo.save(newUser)).pipe(
           map((user: CreateUserDto) => {
@@ -42,6 +43,16 @@ export class UsersService {
     );
   }
 
+  paginate(options: IPaginationOptions): Observable<Pagination<CreateUserDto>> {
+    return from(paginate<CreateUserDto>(this.userRepo, options)).pipe(
+      map((usersPageable: Pagination<CreateUserDto>) => {
+        usersPageable.items.forEach((v) => delete v.password);
+
+        return usersPageable;
+      })
+    )
+  }
+
   findOne(id: number): Observable<CreateUserDto> {
     return from(this.userRepo.findOne({ where: { id: id } })).pipe(
       map((user: CreateUserDto) => {
@@ -54,6 +65,7 @@ export class UsersService {
   update(id: number, user: UpdateUserDto): Observable<any> {
     delete user.email;
     delete user.password;
+    delete user.role;
     return from(this.userRepo.update(id, user));
   }
 
